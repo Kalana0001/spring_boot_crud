@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import './Home.css';
+import { useNavigate } from 'react-router-dom';
+
 const Home = () => {
   const [employees, setEmployees] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchEmployees = async () => {
@@ -18,6 +21,32 @@ const Home = () => {
     fetchEmployees();
   }, []);
 
+  const deleteEmployee = async (id) => {
+    const isConfirmed = window.confirm("Are you sure you want to delete this employee?");
+    
+    if (isConfirmed) {
+      try {
+        const response = await fetch(`http://localhost:8080/api/employee/deleteEmployee/${id}`, {
+          method: 'DELETE',
+        });
+
+        if (!response.ok) {
+          setEmployees((prevEmployees) => 
+            prevEmployees.filter((employee) => employee.id !== employee.id)
+          )
+        }
+        const data = await response.json();
+        console.log("Employee Deleted:", data);
+        setEmployees(employees.filter((employee) => employee.id !== id));
+      } catch (err) {
+        console.error("Error deleting employee", err);
+      }
+    }
+  };
+
+  const handleUpdate = (id) => {
+    navigate(`/updateuser/${id}`);
+  };
   return (
     <div className="page-container">
       <h1 className="page-heading">Employee Directory</h1>
@@ -40,8 +69,16 @@ const Home = () => {
                 <td>{employee.phone}</td>
                 <td>{employee.department}</td>
                 <td>
-                  <button className="button-edit">Edit</button>
-                  <button className="button-delete">Delete</button>
+                  <button className="button-edit" 
+                  onClick={() => handleUpdate(employee.id)}>
+                    Update
+                  </button>
+                  <button
+                    className="button-delete"
+                    onClick={() => deleteEmployee(employee.id)} 
+                  >
+                    Delete
+                  </button>
                 </td>
               </tr>
             ))
